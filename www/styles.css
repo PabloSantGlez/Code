@@ -1,0 +1,300 @@
+/* ============================================================
+   NBA Draft Analysis — Corporate Edition
+   www/styles.css
+   ============================================================ */
+
+/* ── Fuente corporativa (sin API externa) ───────────────────
+   Gill Sans: tipografía deportiva clásica, usada por la NBA.
+   Fallback sólido para todos los sistemas operativos.
+   ─────────────────────────────────────────────────────────── */
+:root {
+  --font-display: "Gill Sans", "Gill Sans MT", "Trebuchet MS", sans-serif;
+  --font-body:    "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-mono:    "Consolas", "Courier New", monospace;
+
+  /* ── Paleta NBA ─────────────────────────────────────────── */
+  --navy:         #1D428A;   /* NBA Blue oficial */
+  --navy-dark:    #0F2355;
+  --navy-deeper:  #091840;
+  --red:          #C8102E;   /* NBA Red oficial  */
+  --red-dark:     #A00D24;
+
+  --bg-body:      #F2F4F8;
+  --bg-surface:   #FFFFFF;
+  --bg-subtle:    #F8F9FC;
+
+  --text-primary: #0D1B3E;
+  --text-secondary:#4A5568;
+  --text-muted:   #8A93A6;
+  --border:       #E2E8F0;
+
+  --shadow-sm:    0 1px 3px rgba(13,27,62,0.08);
+  --shadow-md:    0 4px 12px rgba(13,27,62,0.10);
+  --shadow-lg:    0 8px 24px rgba(13,27,62,0.12);
+
+  --radius-sm:    4px;
+  --radius-md:    8px;
+  --radius-lg:    12px;
+  --ease:         0.2s ease;
+}
+
+/* ── Reset ──────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* ── Base ───────────────────────────────────────────────────── */
+html, body,
+.content-wrapper,
+.right-side {
+  font-family: var(--font-body);
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.main-header .navbar {
+  background-color: var(--navy) !important;
+  border-bottom: 3px solid var(--red) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.main-header .logo {
+  background-color: var(--navy-dark) !important;
+  font-family: var(--font-display) !important;
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase;
+  color: #ffffff !important;
+  border-bottom: none !important;
+  border-right: 1px solid rgba(255,255,255,0.08) !important;
+  transition: background-color var(--ease);
+}
+
+.main-header .logo:hover {
+  background-color: var(--navy-deeper) !important;
+}
+
+/* Franja roja decorativa bajo el logo */
+.main-header .logo::after {
+  content: '';
+  display: block;
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--red);
+}
+
+.main-header .navbar .sidebar-toggle,
+.main-header .navbar .navbar-nav > li > a {
+  color: rgba(255,255,255,0.65) !important;
+  transition: color var(--ease);
+}
+
+.main-header .navbar .sidebar-toggle:hover,
+.main-header .navbar .navbar-nav > li > a:hover {
+  color: #ffffff !important;
+  background: transparent !important;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────── */
+.main-sidebar {
+  background-color: var(--navy-dark) !important;
+  border-right: none !important;
+  box-shadow: 3px 0 16px rgba(13,27,62,0.18);
+  font-family: var(--font-body);
+}
+
+/* Línea roja de acento en ítem activo / hover */
+.sidebar-menu > li > a {
+  color: rgba(255,255,255,0.60) !important;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  border-left: 3px solid transparent !important;
+  padding-left: 18px !important;
+  transition: all var(--ease);
+}
+
+.sidebar-menu > li.active > a,
+.sidebar-menu > li > a:hover {
+  color: #ffffff !important;
+  background-color: rgba(255,255,255,0.06) !important;
+  border-left: 3px solid var(--red) !important;
+}
+
+/* Label de sección en sidebar */
+.sidebar-menu > li.header {
+  font-family: var(--font-display) !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.30) !important;
+  padding: 18px 15px 6px !important;
+}
+
+/* Sidebar description */
+.sidebar-desc {
+  padding: 14px 18px;
+  color: rgba(255,255,255,0.45);
+  font-size: 12px;
+  line-height: 1.7;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.sidebar-desc strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.75);
+  margin-bottom: 6px;
+}
+
+/* ── Select / Inputs ─────────────────────────────────────────── */
+label, .control-label {
+  font-family: var(--font-display) !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.40) !important;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.selectize-input {
+  font-family: var(--font-body) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  border-radius: var(--radius-sm) !important;
+  color: #ffffff !important;
+  padding: 9px 12px !important;
+  box-shadow: none !important;
+  transition: border-color var(--ease), box-shadow var(--ease);
+}
+
+.selectize-input.focus {
+  border-color: var(--red) !important;
+  box-shadow: 0 0 0 3px rgba(200,16,46,0.20) !important;
+}
+
+.selectize-input .item {
+  color: #ffffff !important;
+}
+
+.selectize-dropdown {
+  background: var(--navy-dark) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  border-radius: var(--radius-sm) !important;
+  box-shadow: var(--shadow-lg) !important;
+  font-family: var(--font-body) !important;
+  overflow: hidden;
+}
+
+.selectize-dropdown .option {
+  color: rgba(255,255,255,0.65) !important;
+  font-size: 13px;
+  padding: 9px 14px;
+  transition: background var(--ease), color var(--ease);
+}
+
+.selectize-dropdown .option:hover,
+.selectize-dropdown .option.active {
+  background: rgba(255,255,255,0.08) !important;
+  color: #ffffff !important;
+}
+
+.selectize-dropdown .option.selected {
+  background: rgba(200,16,46,0.15) !important;
+  color: #ffffff !important;
+}
+
+/* ── Boxes / Cards ───────────────────────────────────────────── */
+.box {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border) !important;
+  border-top: 3px solid var(--navy) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-sm) !important;
+  margin-bottom: 20px;
+  transition: box-shadow var(--ease), border-top-color var(--ease);
+  overflow: hidden;
+}
+
+.box:hover {
+  box-shadow: var(--shadow-lg) !important;
+  border-top-color: var(--red) !important;
+}
+
+.box-body {
+  background: transparent !important;
+  padding: 20px !important;
+}
+
+.box-header {
+  background: var(--bg-subtle) !important;
+  border-bottom: 1px solid var(--border) !important;
+  padding: 14px 20px !important;
+}
+
+.box-header .box-title {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--text-primary) !important;
+}
+
+.box-header .box-tools .btn {
+  color: var(--text-muted) !important;
+  background: transparent !important;
+  border: none !important;
+  transition: color var(--ease);
+}
+
+.box-header .box-tools .btn:hover {
+  color: var(--navy) !important;
+}
+
+/* ── Divisor ────────────────────────────────────────────────── */
+hr {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  margin: 12px 0;
+}
+
+/* ── Highcharts override ─────────────────────────────────────── */
+.highcharts-root {
+  font-family: var(--font-body) !important;
+}
+
+.highcharts-title {
+  font-family: var(--font-display) !important;
+  font-weight: 700 !important;
+  fill: var(--text-primary) !important;
+}
+
+.highcharts-subtitle {
+  fill: var(--text-muted) !important;
+}
+
+.highcharts-axis-labels text {
+  fill: var(--text-secondary) !important;
+  font-size: 11px !important;
+}
+
+.highcharts-grid-line {
+  stroke: var(--border) !important;
+}
+
+/* ── Shiny recalculating ─────────────────────────────────────── */
+.recalculating { opacity: 0.35; transition: opacity 0.2s; }
