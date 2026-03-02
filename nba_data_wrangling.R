@@ -183,14 +183,14 @@ picksAverage <- dataPerformance %>% group_by(overall_pick) %>%
   summarise(observed_perf = mean(overall_performance))
 
 
-max_perf <- max(picksAverage$observed_perf, na.rm = TRUE)
-min_perf <- min(picksAverage$observed_perf, na.rm = TRUE)
 
 ideal_curve_simple <- data.frame(overall_pick = 1:60)
 
+modelo_lineal <- lm(observed_perf ~ overall_pick, data = picksAverage)
+
 ideal_curve_simple <- ideal_curve_simple %>%
   mutate(
-    expected_perf = max_perf - ((max_perf - min_perf) / 59) * (overall_pick - 1)
+    expected_perf = predict(modelo_lineal, newdata = ideal_curve_simple)
   )
  
 

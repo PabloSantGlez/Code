@@ -16,28 +16,28 @@ mod_heatmap_ui <- function(id) {
 # ── 2. Server ────────────────────────────────────────────────
 mod_heatmap_server <- function(id, data, year_reactivo, nba_title, nba_subtitle, nba_tooltip) {
   moduleServer(id, function(input, output, session) {
-
+    
     output$chart_heatmap <- renderHighchart({
       current_year <- year_reactivo()
-
+      
       lottery_picks <- data %>%
         filter(year == current_year, unit == "Player") %>%
         distinct(player, overall_pick) %>%
         arrange(overall_pick) %>%
         head(14) %>%
         pull(player)
-
+      
       df_heat <- data %>%
         filter(year == current_year, unit == "Player", player %in% lottery_picks) %>%
         group_by(indicator) %>%
         mutate(
           raw_value = round(value, 2),
           normValue = (value - min(value, na.rm = TRUE)) /
-                      (max(value, na.rm = TRUE) - min(value, na.rm = TRUE))
+            (max(value, na.rm = TRUE) - min(value, na.rm = TRUE))
         ) %>%
         ungroup() %>%
         arrange(desc(overall_pick))
-
+      
       hchart(df_heat, "heatmap",
              hcaes(x = indicator, y = player, value = normValue)) %>%
         hc_chart(

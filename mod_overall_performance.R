@@ -104,7 +104,6 @@ mod_pick_performance_server <- function(id, data, year_reactivo,
           gridLineColor = "#E2E8F0",
           lineColor     = "#E2E8F0",
           labels        = list(style = list(color = "#4A5568", fontSize = "11px")),
-          # Línea divisoria entre Lottery (1-14) y resto
           plotLines = list(
             list(
               value     = 14.5,
@@ -148,7 +147,7 @@ mod_pick_performance_server <- function(id, data, year_reactivo,
       
       if (this.points[0].point.custom && 
           this.points[0].point.custom.player) {
-        s += '<span style=\"font-size:11px; opacity:0.7\">' 
+        s += '<span style=\"font-size:13px; opacity:1\">' 
              + this.points[0].point.custom.player + 
              '</span><br/><br/>';
       }
