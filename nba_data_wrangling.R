@@ -13,6 +13,7 @@ library(ggplot2)
 library(tidyverse)
 library(splines)
  
+source("mod_heatmap.R")
  
 select <- dplyr::select
 mutate <- dplyr::mutate
@@ -181,14 +182,20 @@ picksAverage <- dataPerformance %>% group_by(overall_pick) %>%
   mutate(overall_pick = as.numeric(overall_pick)) %>%
   summarise(observed_perf = mean(overall_performance))
 
-spline_model <- lm(observed_perf ~ ns(overall_pick, knots = c(5, 14, 30, 44), Boundary.knots = c(1,60)), data = picksAverage)
 
-ideal_curve_spline <- data.frame(overall_pick = 1:60)
-ideal_curve_spline$expected_perf <- predict(spline_model, newdata = ideal_curve_spline)
+max_perf <- max(picksAverage$observed_perf, na.rm = TRUE)
+min_perf <- min(picksAverage$observed_perf, na.rm = TRUE)
+
+ideal_curve_simple <- data.frame(overall_pick = 1:60)
+
+ideal_curve_simple <- ideal_curve_simple %>%
+  mutate(
+    expected_perf = max_perf - ((max_perf - min_perf) / 59) * (overall_pick - 1)
+  )
  
 
  
-picksAverage <- picksAverage %>% left_join(ideal_curve_spline, by = "overall_pick")
+picksAverage <- picksAverage %>% left_join(ideal_curve_simple, by = "overall_pick")
  
 
  
