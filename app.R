@@ -320,9 +320,12 @@ server <- function(input, output, session) {
                          )
   mod_rankings_server("rankings",
                       data         = tidyData,
+                      raw_data     = untidyData,
                       nba_title    = nba_title,
                       nba_subtitle = nba_subtitle,
-                      nba_tooltip  = nba_tooltip
+                      nba_tooltip  = nba_tooltip,
+                      rank_levels  = rank_levels,
+                      rank_colors  = rank_colors
   )
 }
 
