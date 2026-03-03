@@ -21,6 +21,7 @@ source("mod_redraft.R")
 source("mod_heatmap.R")
 source("mod_overall_performance.R")
 source("mod_map_college.R")
+source("mod_rankings_universities.R")
 
 # ── Helpers ──────────────────────────────────────────────────
 yeo.johnson <- function(y, lambda) {
@@ -101,7 +102,6 @@ nba_legend <- list(
 # ── Datos ─────────────────────────────────────────────────────
 untidyData <- readr::read_csv("untidyData.csv")
 tidyData   <- readr::read_csv("tidyData.csv")
-unique(tidyData$indicator)
 # ── UI ────────────────────────────────────────────────────────
 ui <- dashboardPage(
   skin = "blue",
@@ -213,14 +213,14 @@ ui <- dashboardPage(
               # Creamos el contenedor de pestañas (sub-navegación)
               tabsetPanel(
                 id = "college_tabs",
-                type = "pills", # "pills" crea botones redondeados, "tabs" crea pestañas clásicas
+                type = "pills",
                 
                 # ── Sub-pestaña 1: Mapa Interactivo ──
                 tabPanel(
                   title = "National Talent Map", 
                   icon = icon("map"),
                   
-                  # Añadimos un pequeño margen superior para separar el mapa de los botones
+                  
                   div(style = "margin-top: 15px; margin-left: -15px; margin-right: -15px;",
                       mod_map_college_ui("map_col")
                   )
@@ -229,14 +229,9 @@ ui <- dashboardPage(
                 # ── Sub-pestaña 2: Factory Rankings (Espacio para el Treemap o Scatter) ──
                 tabPanel(
                   title = "University Rankings",
-                  icon = icon("list-ol"),
-                  
+                  icon  = icon("list-ol"),
                   div(style = "margin-top: 20px;",
-                      box(
-                        title = "Top NBA Factories", status = "primary", solidHeader = TRUE, width = 12,
-                        p("Aquí colocaremos el Scatter Plot de Draft ROI por Universidad o el Treemap.", 
-                          style = "color: #8A93A6; font-style: italic;")
-                      )
+                      mod_rankings_ui("rankings")
                   )
                 ),
                 
@@ -323,6 +318,12 @@ server <- function(input, output, session) {
                          nba_title = nba_title,
                          nba_subtitle = nba_subtitle
                          )
+  mod_rankings_server("rankings",
+                      data         = tidyData,
+                      nba_title    = nba_title,
+                      nba_subtitle = nba_subtitle,
+                      nba_tooltip  = nba_tooltip
+  )
 }
 
 # ── Run ───────────────────────────────────────────────────────
