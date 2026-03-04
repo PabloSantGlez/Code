@@ -16,10 +16,13 @@ filter <- dplyr::filter
 group_by <- dplyr::group_by
 summarise <- dplyr::summarise
 
+# ── Estilos compartidos ──────────────────────────────────────
+source("utils_chart_styles.R")
+
 # ── Módulos ──────────────────────────────────────────────────
 source("mod_redraft.R")
 source("mod_heatmap.R")
-source("mod_overall_performance.R")
+source("mod_pick_performance.R")
 source("mod_map_college.R")
 source("mod_rankings_universities.R")
 source("mod_area_rank.R")
@@ -59,53 +62,7 @@ ParetoValue <- function(v, ParetoSignificancia) {
   x[which(cumsum(x) >= ParetoSignificancia * sum(x))[1]]
 }
 
-# ── Constantes ───────────────────────────────────────────────
-rank_levels <- c(
-  "Generational", "SuperStar", "Star", "Elite",
-  "Starter", "Solid", "Role", "Rotation", "Deep"
-)
-
-rank_colors <- c(
-  "Generational" = "#FFD700",
-  "SuperStar"    = "#C8102E",
-  "Star"         = "#A00D24",
-  "Elite"        = "#091840",
-  "Starter"      = "#0F2355",
-  "Solid"        = "#1D428A",
-  "Role"         = "#5C7EB0",
-  "Rotation"     = "#98ABC8",
-  "Deep"         = "#CED4DA"
-)
-
-# ── Estilos NBA ───────────────────────────────────────────────
-nba_title <- list(
-  style = list(
-    color = "#0F2355", fontFamily = "Trebuchet MS",
-    fontWeight = "700", fontSize = "17px"
-  )
-)
-nba_subtitle <- list(
-  style = list(color = "#8A93A6", fontSize = "12px")
-)
-nba_tooltip <- list(
-  backgroundColor = "#0F2355",
-  borderColor     = "#1D428A",
-  borderRadius    = 6,
-  borderWidth     = 0,
-  style           = list(color = "#FFFFFF", fontSize = "12px")
-)
-nba_axis <- list(
-  gridLineColor = "#E2E8F0",
-  lineColor     = "#E2E8F0"
-)
-nba_legend <- list(
-  align          = "right",
-  verticalAlign  = "middle",
-  layout         = "vertical",
-  title          = list(text = "Categoria"),
-  itemStyle      = list(color = "#4A5568", fontSize = "11px", fontWeight = "500"),
-  itemHoverStyle = list(color = "#0F2355")
-)
+# ── Constantes y estilos: definidos en utils_chart_styles.R ──
 
 # ── Datos ─────────────────────────────────────────────────────
 untidyData <- readr::read_csv("untidyData.csv")
@@ -127,33 +84,7 @@ ui <- dashboardPage(
   ),
   dashboardBody(
     tags$head(
-      tags$link(rel = "stylesheet", type = "text/css", href = "styles.css"),
-      tags$style(HTML("
-        #draft_table {
-          color: var(--bg-surface);
-          font-family: var(--font-body);
-        }
-        #draft_table th {
-          color: var(--bg-surface);
-          font-family: var(--font-display);
-          font-size: 11px;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          border-bottom: 2px solid var(--navy) !important;
-          padding: 8px 4px !important;
-        }
-        #draft_table td {
-          border-bottom: 1px solid var(--red-dark);
-          padding: 6px 4px !important;
-          vertical-align: middle;
-        }
-        #draft_table tr:hover {
-          background-color: var(--red-dark) !important;
-        }
-        .draft-scroll::-webkit-scrollbar { width: 4px; }
-        .draft-scroll::-webkit-scrollbar-track { background: var(--navy-dark); }
-        .draft-scroll::-webkit-scrollbar-thumb { background: var(--red); border-radius: 10px; }
-      "))
+      tags$link(rel = "stylesheet", type = "text/css", href = "styles.css")
     ),
     tabItems(
       # --- PESTAÑA 1: Overall Performance ---
@@ -345,27 +276,17 @@ server <- function(input, output, session) {
 
   mod_redraft_server("redraft",
     data          = untidyData,
-    year_reactivo = year_sel,
-    nba_title     = nba_title,
-    nba_subtitle  = nba_subtitle,
-    nba_tooltip   = nba_tooltip,
-    nba_legend    = nba_legend
+    year_reactivo = year_sel
   )
 
   mod_heatmap_server("heatmap",
     data          = tidyData,
-    year_reactivo = year_sel,
-    nba_title     = nba_title,
-    nba_subtitle  = nba_subtitle,
-    nba_tooltip   = nba_tooltip
+    year_reactivo = year_sel
   )
 
   mod_pick_performance_server("pick_perf",
     data          = untidyData,
-    year_reactivo = year_sel,
-    nba_title     = nba_title,
-    nba_subtitle  = nba_subtitle,
-    nba_tooltip   = nba_tooltip
+    year_reactivo = year_sel
   )
 
   output$draft_table <- renderTable(
@@ -388,50 +309,31 @@ server <- function(input, output, session) {
 
   mod_map_college_server("map_col",
     data         = tidyData,
-    raw_data     = untidyData,
-    nba_title    = nba_title,
-    nba_subtitle = nba_subtitle
+    raw_data     = untidyData
   )
 
   mod_rankings_server("rankings",
     data         = tidyData,
-    metric_sel   = metric_sel,
-    nba_title    = nba_title,
-    nba_subtitle = nba_subtitle,
-    nba_tooltip  = nba_tooltip
+    metric_sel   = metric_sel
   )
 
   mod_area_rank_server("area_rank",
     data         = tidyData,
-    metric_sel   = metric_sel,
-    nba_title    = nba_title,
-    nba_subtitle = nba_subtitle,
-    nba_tooltip  = nba_tooltip,
-    rank_levels  = rank_levels,
-    rank_colors  = rank_colors
+    metric_sel   = metric_sel
   )
 
   mod_scatter_server("scatter",
     data         = tidyData,
-    metric_sel   = metric_sel,
-    nba_title    = nba_title,
-    nba_subtitle = nba_subtitle,
-    nba_tooltip  = nba_tooltip
+    metric_sel   = metric_sel
   )
 
   mod_timeline_server("timeline",
     data         = tidyData,
-    metric_sel   = metric_sel,
-    nba_title    = nba_title,
-    nba_subtitle = nba_subtitle,
-    nba_tooltip  = nba_tooltip
+    metric_sel   = metric_sel
   )
 
   mod_spider_server("spider",
-    data         = tidyData,
-    nba_title    = nba_title,
-    nba_subtitle = nba_subtitle,
-    nba_tooltip  = nba_tooltip
+    data         = tidyData
   )
 }
 
