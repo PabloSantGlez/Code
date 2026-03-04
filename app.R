@@ -10,10 +10,10 @@ library(readr)
 options(shiny.autoreload = TRUE)
 
 # ── Conflictos ───────────────────────────────────────────────
-select    <- dplyr::select
-mutate    <- dplyr::mutate
-filter    <- dplyr::filter
-group_by  <- dplyr::group_by
+select <- dplyr::select
+mutate <- dplyr::mutate
+filter <- dplyr::filter
+group_by <- dplyr::group_by
 summarise <- dplyr::summarise
 
 # ── Módulos ──────────────────────────────────────────────────
@@ -23,11 +23,13 @@ source("mod_overall_performance.R")
 source("mod_map_college.R")
 source("mod_rankings_universities.R")
 source("mod_area_rank.R")
+source("mod_scatter_university.R")
+source("mod_timeline_university.R")
 source("mod_spider_university.R")
 
 # ── Helpers ──────────────────────────────────────────────────
 yeo.johnson <- function(y, lambda) {
-  y_t     <- numeric(length(y))
+  y_t <- numeric(length(y))
   pos_idx <- which(y >= 0)
   if (lambda == 0) {
     y_t[pos_idx] <- log(y[pos_idx] + 1)
@@ -38,14 +40,14 @@ yeo.johnson <- function(y, lambda) {
   if (lambda == 2) {
     y_t[neg_idx] <- -log(-y[neg_idx] + 1)
   } else {
-    y_t[neg_idx] <- -(( (-y[neg_idx] + 1)^(2 - lambda) - 1) / (2 - lambda))
+    y_t[neg_idx] <- -(((-y[neg_idx] + 1)^(2 - lambda) - 1) / (2 - lambda))
   }
   return(y_t)
 }
 
 optimize.yeojohnson.R2 <- function(x, y, lambda_range = c(-1, 1.9)) {
   r2_neg <- function(lambda) {
-    y_t    <- yeo.johnson(y, lambda)
+    y_t <- yeo.johnson(y, lambda)
     modelo <- lm(y_t ~ x)
     -summary(modelo)$r.squared
   }
@@ -58,8 +60,10 @@ ParetoValue <- function(v, ParetoSignificancia) {
 }
 
 # ── Constantes ───────────────────────────────────────────────
-rank_levels <- c("Generational", "SuperStar", "Star", "Elite",
-                 "Starter", "Solid", "Role", "Rotation", "Deep")
+rank_levels <- c(
+  "Generational", "SuperStar", "Star", "Elite",
+  "Starter", "Solid", "Role", "Rotation", "Deep"
+)
 
 rank_colors <- c(
   "Generational" = "#FFD700",
@@ -75,8 +79,10 @@ rank_colors <- c(
 
 # ── Estilos NBA ───────────────────────────────────────────────
 nba_title <- list(
-  style = list(color = "#0F2355", fontFamily = "Trebuchet MS",
-               fontWeight = "700", fontSize = "17px")
+  style = list(
+    color = "#0F2355", fontFamily = "Trebuchet MS",
+    fontWeight = "700", fontSize = "17px"
+  )
 )
 nba_subtitle <- list(
   style = list(color = "#8A93A6", fontSize = "12px")
@@ -103,25 +109,22 @@ nba_legend <- list(
 
 # ── Datos ─────────────────────────────────────────────────────
 untidyData <- readr::read_csv("untidyData.csv")
-tidyData   <- readr::read_csv("tidyData.csv")
+tidyData <- readr::read_csv("tidyData.csv")
 
 # ── UI ────────────────────────────────────────────────────────
 ui <- dashboardPage(
   skin = "blue",
-
   dashboardHeader(title = "Draft Analysis"),
-
   dashboardSidebar(
     width = 230,
     sidebarMenu(
       id = "tabs",
-      menuItem("Overall Performance", tabName = "overall",  icon = icon("dashboard")),
-      menuItem("College & Scouting",  tabName = "college",  icon = icon("graduation-cap")),
-      menuItem("Positional Value",    tabName = "position", icon = icon("users")),
-      menuItem("Busts & Steals",      tabName = "outliers", icon = icon("search"))
+      menuItem("Overall Performance", tabName = "overall", icon = icon("dashboard")),
+      menuItem("College & Scouting", tabName = "college", icon = icon("graduation-cap")),
+      menuItem("Positional Value", tabName = "position", icon = icon("users")),
+      menuItem("Busts & Steals", tabName = "outliers", icon = icon("search"))
     )
   ),
-
   dashboardBody(
     tags$head(
       tags$link(rel = "stylesheet", type = "text/css", href = "styles.css"),
@@ -152,13 +155,13 @@ ui <- dashboardPage(
         .draft-scroll::-webkit-scrollbar-thumb { background: var(--red); border-radius: 10px; }
       "))
     ),
-
     tabItems(
-
       # --- PESTAÑA 1: Overall Performance ---
-      tabItem(tabName = "overall",
+      tabItem(
+        tabName = "overall",
         fluidRow(
-          column(width = 2,
+          column(
+            width = 2,
             div(
               style = "background-color: var(--navy-deeper);
                        border: 1px solid var(--border);
@@ -177,18 +180,22 @@ ui <- dashboardPage(
                 selected = 2003
               ),
               p("Filter to view specific draft class performance.",
-                style = "color: var(--bg-surface); font-size: 11px; margin-top: 10px;"),
+                style = "color: var(--bg-surface); font-size: 11px; margin-top: 10px;"
+              ),
               hr(style = "border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0;"),
               h5("DRAFT CLASS",
-                 style = "color: var(--bg-surface); font-family: var(--font-display);
-                          font-weight: 700; font-size: 12px; letter-spacing: 1px;"),
-              div(class = "draft-scroll",
-                  style = "flex-grow: 1; overflow-y: auto; margin-right: -5px; padding-right: 5px;",
-                  tableOutput("draft_table")
+                style = "color: var(--bg-surface); font-family: var(--font-display);
+                          font-weight: 700; font-size: 12px; letter-spacing: 1px;"
+              ),
+              div(
+                class = "draft-scroll",
+                style = "flex-grow: 1; overflow-y: auto; margin-right: -5px; padding-right: 5px;",
+                tableOutput("draft_table")
               )
             )
           ),
-          column(width = 10,
+          column(
+            width = 10,
             fluidRow(mod_pick_performance_ui("pick_perf")),
             fluidRow(mod_redraft_ui("redraft"), mod_heatmap_ui("heatmap"))
           )
@@ -196,32 +203,37 @@ ui <- dashboardPage(
       ),
 
       # --- PESTAÑA 2: College & Scouting ---
-      tabItem(tabName = "college",
+      tabItem(
+        tabName = "college",
         h2("College Talent & Scouting",
-           style = "color: #0F2355; font-weight: bold; margin-bottom: 20px;"),
+          style = "color: #0F2355; font-weight: bold; margin-bottom: 20px;"
+        ),
         tabsetPanel(
-          id   = "college_tabs",
+          id = "college_tabs",
           type = "pills",
 
           # ── Sub-pestaña 1: Mapa ──
           tabPanel(
             title = "National Talent Map",
-            icon  = icon("map"),
-            div(style = "margin-top: 15px; margin-left: -15px; margin-right: -15px;",
-                mod_map_college_ui("map_col")
+            icon = icon("map"),
+            div(
+              style = "margin-top: 15px; margin-left: -15px; margin-right: -15px;",
+              mod_map_college_ui("map_col")
             )
           ),
 
           # ── Sub-pestaña 2: University Rankings ──
           tabPanel(
             title = "Universities Ranking",
-            icon  = icon("list-ol"),
-            div(style = "margin-top: 20px;",
-                fluidRow(
-                  # Panel filtros
-                  column(width = 2,
-                    div(
-                      style = "background-color: var(--navy-deeper);
+            icon = icon("list-ol"),
+            div(
+              style = "margin-top: 20px;",
+              fluidRow(
+                # Panel filtros
+                column(
+                  width = 2,
+                  div(
+                    style = "background-color: var(--navy-deeper);
                                border: 1px solid var(--border);
                                border-radius: var(--radius-lg);
                                padding: 20px;
@@ -229,85 +241,96 @@ ui <- dashboardPage(
                                height: fit-content;
                                display: flex;
                                flex-direction: column;",
-                      h4("Rankings", style = "color: #FFFFFF; font-weight: 700; margin-top: 0;"),
-                      hr(style = "border-top: 1px solid rgba(255,255,255,0.1);"),
-                      h5("METRIC", style = "color: var(--bg-surface); font-family: var(--font-display);
+                    h4("Rankings", style = "color: #FFFFFF; font-weight: 700; margin-top: 0;"),
+                    hr(style = "border-top: 1px solid rgba(255,255,255,0.1);"),
+                    h5("METRIC", style = "color: var(--bg-surface); font-family: var(--font-display);
                                             font-weight: 700; font-size: 12px; letter-spacing: 1px;"),
-                      selectInput("rankings_metric",
-                        label   = NULL,
-                        choices = c(
-                          "Overall Performance"  = "overall_performance",
-                          "Games"                = "games",
-                          "Minutes Played"       = "minutes_played",
-                          "Years Active"         = "years_active",
-                          "Avg Minutes Played"   = "average_minutes_played",
-                          "Points per Game"      = "points_per_game",
-                          "Avg Assists"          = "average_assists",
-                          "Avg Total Rebounds"   = "average_total_rebounds",
-                          "Points"               = "points",
-                          "Assists"              = "assists",
-                          "Total Rebounds"       = "total_rebounds",
-                          "3PT Percentage"       = "3_point_percentage",
-                          "FG Percentage"        = "field_goal_percentage",
-                          "FT Percentage"        = "free_throw_percentage",
-                          "Win Shares / 48"      = "win_shares_per_48_minutes",
-                          "Win Shares"           = "win_shares",
-                          "VORP"                 = "value_over_replacement",
-                          "Box Plus/Minus"       = "box_plus_minus"
-                        ),
-                        selected = "overall_performance"
+                    selectInput("rankings_metric",
+                      label = NULL,
+                      choices = c(
+                        "Overall Performance"  = "overall_performance",
+                        "Games"                = "games",
+                        "Minutes Played"       = "minutes_played",
+                        "Years Active"         = "years_active",
+                        "Avg Minutes Played"   = "average_minutes_played",
+                        "Points per Game"      = "points_per_game",
+                        "Avg Assists"          = "average_assists",
+                        "Avg Total Rebounds"   = "average_total_rebounds",
+                        "Points"               = "points",
+                        "Assists"              = "assists",
+                        "Total Rebounds"       = "total_rebounds",
+                        "3PT Percentage"       = "3_point_percentage",
+                        "FG Percentage"        = "field_goal_percentage",
+                        "FT Percentage"        = "free_throw_percentage",
+                        "Win Shares / 48"      = "win_shares_per_48_minutes",
+                        "Win Shares"           = "win_shares",
+                        "VORP"                 = "value_over_replacement",
+                        "Box Plus/Minus"       = "box_plus_minus"
                       ),
-                      hr(style = "border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0;"),
-                      p("Select the performance metric to rank the top 10 universities.",
-                        style = "color: var(--bg-surface); font-size: 11px; margin-top: 10px;")
-                    )
-                  ),
-                  # Gráficos
-                  column(width = 10,
-                    fluidRow(
-                      column(width = 6, mod_rankings_ui("rankings")),
-                      column(width = 6, mod_area_rank_ui("area_rank"))
+                      selected = "overall_performance"
+                    ),
+                    hr(style = "border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0;"),
+                    p("Select a metric to rank universities and explore the data.",
+                      style = "color: var(--bg-surface); font-size: 11px; margin-top: 10px;"
                     )
                   )
+                ),
+                # Charts 2×2 grid
+                column(
+                  width = 10,
+                  fluidRow(
+                    column(width = 6, mod_rankings_ui("rankings")),
+                    column(width = 6, mod_area_rank_ui("area_rank"))
+                  ),
+                  fluidRow(
+                    column(width = 6, mod_scatter_ui("scatter")),
+                    column(width = 6, mod_timeline_ui("timeline"))
+                  )
                 )
+              )
             )
           ),
 
           # ── Sub-pestaña 3: University Profiles (Spider) ──
           tabPanel(
             title = "University Profiles",
-            icon  = icon("chart-area"),
-            div(style = "margin-top: 20px;",
-                mod_spider_ui("spider")
+            icon = icon("chart-area"),
+            div(
+              style = "margin-top: 20px;",
+              mod_spider_ui("spider")
             )
           ),
 
           # ── Sub-pestaña 4: Non College Players ──
           tabPanel(
             title = "Non College Players",
-            icon  = icon("earth-europe"),
-            div(style = "margin-top: 20px;",
-                box(
-                  title       = "Analysis of Players that Didn't Play College",
-                  status      = "danger",
-                  solidHeader = TRUE,
-                  width       = 12,
-                  p("Aquí colocaremos el Lollipop Chart.",
-                    style = "color: #8A93A6; font-style: italic;")
+            icon = icon("earth-europe"),
+            div(
+              style = "margin-top: 20px;",
+              box(
+                title = "Analysis of Players that Didn't Play College",
+                status = "danger",
+                solidHeader = TRUE,
+                width = 12,
+                p("Aquí colocaremos el Lollipop Chart.",
+                  style = "color: #8A93A6; font-style: italic;"
                 )
+              )
             )
           )
         )
       ),
 
       # --- PESTAÑA 3: Positional Value ---
-      tabItem(tabName = "position",
+      tabItem(
+        tabName = "position",
         h2("Positional Draft Strategy", style = "color: #0F2355; font-weight: bold;"),
         p("Análisis de riesgo/recompensa por posición.")
       ),
 
       # --- PESTAÑA 4: Busts & Steals ---
-      tabItem(tabName = "outliers",
+      tabItem(
+        tabName = "outliers",
         h2("Busts & Steals Deep Dive", style = "color: #0F2355; font-weight: bold;"),
         p("Jugadores atípicos del Draft.")
       )
@@ -317,8 +340,7 @@ ui <- dashboardPage(
 
 # ── Server ────────────────────────────────────────────────────
 server <- function(input, output, session) {
-
-  year_sel   <- reactive(input$year)
+  year_sel <- reactive(input$year)
   metric_sel <- reactive(input$rankings_metric)
 
   mod_redraft_server("redraft",
@@ -346,17 +368,23 @@ server <- function(input, output, session) {
     nba_tooltip   = nba_tooltip
   )
 
-  output$draft_table <- renderTable({
-    untidyData %>%
-      filter(year == year_sel()) %>%
-      arrange(overall_pick) %>%
-      mutate(overall_pick = as.character(overall_pick)) %>%
-      select(
-        `PICK`   = overall_pick,
-        `PLAYER` = player,
-        `TEAM`   = team
-      )
-  }, striped = FALSE, hover = TRUE, width = "100%", align = "cll")
+  output$draft_table <- renderTable(
+    {
+      untidyData %>%
+        filter(year == year_sel()) %>%
+        arrange(overall_pick) %>%
+        mutate(overall_pick = as.character(overall_pick)) %>%
+        select(
+          `PICK`   = overall_pick,
+          `PLAYER` = player,
+          `TEAM`   = team
+        )
+    },
+    striped = FALSE,
+    hover = TRUE,
+    width = "100%",
+    align = "cll"
+  )
 
   mod_map_college_server("map_col",
     data         = tidyData,
@@ -374,12 +402,29 @@ server <- function(input, output, session) {
   )
 
   mod_area_rank_server("area_rank",
-    data     = tidyData,
+    data         = tidyData,
+    metric_sel   = metric_sel,
     nba_title    = nba_title,
     nba_subtitle = nba_subtitle,
     nba_tooltip  = nba_tooltip,
     rank_levels  = rank_levels,
     rank_colors  = rank_colors
+  )
+
+  mod_scatter_server("scatter",
+    data         = tidyData,
+    metric_sel   = metric_sel,
+    nba_title    = nba_title,
+    nba_subtitle = nba_subtitle,
+    nba_tooltip  = nba_tooltip
+  )
+
+  mod_timeline_server("timeline",
+    data         = tidyData,
+    metric_sel   = metric_sel,
+    nba_title    = nba_title,
+    nba_subtitle = nba_subtitle,
+    nba_tooltip  = nba_tooltip
   )
 
   mod_spider_server("spider",
