@@ -28,8 +28,10 @@ mod_area_rank_server <- function(id, data, metric_sel, nba_title, nba_subtitle, 
         group_by(college) %>%
         summarise(
           avg_metric = mean(as.numeric(value), na.rm = TRUE),
+          n_players  = n_distinct(player),
           .groups    = "drop"
         ) %>%
+        filter(n_players >= 15) %>%
         arrange(desc(avg_metric)) %>%
         head(15) %>%
         pull(college)

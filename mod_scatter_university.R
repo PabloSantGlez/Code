@@ -30,7 +30,7 @@ mod_scatter_server <- function(id, data, metric_sel, nba_title, nba_subtitle, nb
                     n_players    = n_distinct(player),
                     .groups      = "drop"
                 ) %>%
-                filter(n_players >= 3) %>%
+                filter(n_players >= 15) %>%
                 arrange(desc(avg_metric))
         })
 

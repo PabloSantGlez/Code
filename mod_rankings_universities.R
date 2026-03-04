@@ -27,7 +27,7 @@ mod_rankings_server <- function(id, data, metric_sel, nba_title, nba_subtitle, n
           n_players  = n_distinct(player),
           .groups    = "drop"
         ) %>%
-        filter(college != "Didn't play College") %>%
+        filter(n_players >= 15, college != "Didn't play College") %>%
         arrange(desc(avg_metric)) %>%
         head(15)
     })
