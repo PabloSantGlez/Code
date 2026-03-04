@@ -1,5 +1,6 @@
 # ============================================================
-#  Módulo: Spider Charts por Universidad (mod_spider_university.R)
+#  Module: Spider Charts by University (mod_spider_university.R)
+#  Table CSS moved to www/styles.css
 # ============================================================
 
 spider_categories <- list(
@@ -46,37 +47,28 @@ label_map <- c(
   `3_point_percentage`      = "3PT%"
 )
 
-uni_colors      <- c("#C8102E", "#1D428A", "#FFD700")
+uni_colors <- c("#C8102E", "#1D428A", "#FFD700")
 uni_text_colors <- c("#FF6B6B", "#7EB3FF", "#FFD700")
 
 # ── 1. UI ─────────────────────────────────────────────────────
 mod_spider_ui <- function(id) {
   ns <- NS(id)
-  
+
   fluidRow(
-    
-    # ── Columna izquierda: panel + tabla ──────────────────────
-    column(width = 3,
-           
-           div(
-             style = "background-color: var(--navy-deeper);
-                      border: 1px solid var(--border);
-                      border-radius: var(--radius-lg);
-                      padding: 20px;
-                      box-shadow: var(--shadow-md);
-                      display: flex;
-                      flex-direction: column;",
-             
-             h4("University Profiles",
-                style = "color: #FFFFFF; font-weight: 700; margin-top: 0;"),
-             
-             hr(style = "border-top: 1px solid rgba(255,255,255,0.1);"),
-             
-             h5("UNIVERSITIES",
-                style = "color: var(--bg-surface); font-family: var(--font-display);
-                         font-weight: 700; font-size: 12px; letter-spacing: 1px;"),
-             
-             tags$style(HTML(paste0("
+    # ── Left column: filters + table ───────────────────────────
+    column(
+      width = 3,
+      div(
+        class = "filter-panel",
+        h4("University Profiles",
+          style = "color: #FFFFFF; font-weight: 700; margin-top: 0;"
+        ),
+        hr(style = "border-top: 1px solid rgba(255,255,255,0.1);"),
+        h5("UNIVERSITIES",
+          style = "color: var(--bg-surface); font-family: var(--font-display);
+                         font-weight: 700; font-size: 12px; letter-spacing: 1px;"
+        ),
+        tags$style(HTML(paste0("
                 #", ns("unis"), " ~ .selectize-control .selectize-input {
                   background-color: var(--navy-dark) !important;
                   border: 1px solid var(--navy) !important;
@@ -121,59 +113,69 @@ mod_spider_ui <- function(id) {
                   background-color: var(--red-dark) !important;
                 }
              "))),
-             
-             selectizeInput(ns("unis"),
-                            label    = NULL,
-                            choices  = NULL,
-                            multiple = TRUE,
-                            options  = list(
-                              maxItems    = 3,
-                              placeholder = "Type or select...",
-                              searchField = "label"
-                            )
-             )
-           ),
-           
-           div(
-             style = "margin-top: 16px;",
-             uiOutput(ns("values_table"))
-           )
+        selectizeInput(ns("unis"),
+          label = NULL,
+          choices = NULL,
+          multiple = TRUE,
+          options = list(
+            maxItems    = 3,
+            placeholder = "Type or select...",
+            searchField = "label"
+          )
+        )
+      ),
+      div(
+        style = "margin-top: 16px;",
+        uiOutput(ns("values_table"))
+      )
     ),
-    
-    column(width = 9,
-           fluidRow(
-             column(width = 6,
-                    box(title = "Advanced", width = 12, solidHeader = TRUE,
-                        status = "primary", 
-                        highchartOutput(ns("spider_advanced"), height = "320px"))
-             ),
-             column(width = 6,
-                    box(title = "Career Totals", width = 12, solidHeader = TRUE,
-                        status = "primary", 
-                        highchartOutput(ns("spider_totals"), height = "320px"))
-             )
-           ),
-           fluidRow(
-             column(width = 6,
-                    box(title = "Per Game", width = 12, solidHeader = TRUE,
-                        status = "primary", 
-                        highchartOutput(ns("spider_averages"), height = "320px"))
-             ),
-             column(width = 6,
-                    box(title = "Shooting %", width = 12, solidHeader = TRUE,
-                        status = "primary", 
-                        highchartOutput(ns("spider_percentages"), height = "320px"))
-             )
-           )
+    column(
+      width = 9,
+      fluidRow(
+        column(
+          width = 6,
+          box(
+            title = "Advanced", width = 12, solidHeader = TRUE,
+            status = "primary",
+            highchartOutput(ns("spider_advanced"), height = "320px")
+          )
+        ),
+        column(
+          width = 6,
+          box(
+            title = "Career Totals", width = 12, solidHeader = TRUE,
+            status = "primary",
+            highchartOutput(ns("spider_totals"), height = "320px")
+          )
+        )
+      ),
+      fluidRow(
+        column(
+          width = 6,
+          box(
+            title = "Per Game", width = 12, solidHeader = TRUE,
+            status = "primary",
+            highchartOutput(ns("spider_averages"), height = "320px")
+          )
+        ),
+        column(
+          width = 6,
+          box(
+            title = "Shooting %", width = 12, solidHeader = TRUE,
+            status = "primary",
+            highchartOutput(ns("spider_percentages"), height = "320px")
+          )
+        )
+      )
     )
   )
 }
+
 # ── 2. Server ─────────────────────────────────────────────────
-mod_spider_server <- function(id, data, nba_title, nba_subtitle, nba_tooltip) {
+mod_spider_server <- function(id, data) {
   moduleServer(id, function(input, output, session) {
-    
     min_players <- 20
-    
+
     unis_available <- reactive({
       data %>%
         dplyr::distinct(player, college) %>%
@@ -183,48 +185,48 @@ mod_spider_server <- function(id, data, nba_title, nba_subtitle, nba_tooltip) {
         dplyr::arrange(desc(n_players)) %>%
         dplyr::pull(college)
     })
-    
+
     observe({
       unis <- unis_available()
       updateSelectizeInput(session, "unis",
-                           choices  = unis,
-                           selected = unis[1:3],
-                           server   = TRUE
+        choices  = unis,
+        selected = unis[1:3],
+        server   = TRUE
       )
     })
-    
+
     # ── Percentiles ───────────────────────────────────────────
     percentile_data <- reactive({
       req(input$unis)
-      unis_sel     <- input$unis
-      all_metrics  <- unlist(lapply(spider_categories, `[[`, "metrics"))
+      unis_sel <- input$unis
+      all_metrics <- unlist(lapply(spider_categories, `[[`, "metrics"))
       tidy_metrics <- setdiff(all_metrics, "overall_pick")
-      
+
       valid_unis <- data %>%
         dplyr::distinct(player, college) %>%
         dplyr::group_by(college) %>%
         dplyr::summarise(n = dplyr::n_distinct(player), .groups = "drop") %>%
         dplyr::filter(n >= min_players) %>%
         dplyr::pull(college)
-      
+
       tidy_means <- data %>%
         dplyr::filter(college %in% valid_unis, indicator %in% tidy_metrics) %>%
         dplyr::group_by(college, indicator) %>%
         dplyr::summarise(avg = mean(as.numeric(value), na.rm = TRUE), .groups = "drop")
-      
+
       pick_means <- data %>%
         dplyr::filter(college %in% valid_unis) %>%
         dplyr::distinct(player, college, overall_pick) %>%
         dplyr::group_by(college) %>%
         dplyr::summarise(avg = mean(overall_pick, na.rm = TRUE), .groups = "drop") %>%
         dplyr::mutate(indicator = "overall_pick")
-      
+
       dplyr::bind_rows(tidy_means, pick_means) %>%
         dplyr::group_by(indicator) %>%
         dplyr::mutate(
-          n_unis   = dplyr::n(),
-          rnk      = if (dplyr::first(indicator) %in% invert_metrics) {
-            rank(avg,  ties.method = "min")
+          n_unis = dplyr::n(),
+          rnk = if (dplyr::first(indicator) %in% invert_metrics) {
+            rank(avg, ties.method = "min")
           } else {
             rank(-avg, ties.method = "min")
           },
@@ -233,15 +235,15 @@ mod_spider_server <- function(id, data, nba_title, nba_subtitle, nba_tooltip) {
         dplyr::ungroup() %>%
         dplyr::filter(college %in% unis_sel)
     })
-    
-    # ── Helper: construye un spider para una categoría ────────
-    make_spider <- function(df, cat_key, unis_sel, title_style, subtitle_style) {
-      metrics    <- spider_categories[[cat_key]]$metrics
-      cat_df     <- df %>% dplyr::filter(indicator %in% metrics)
+
+    # ── Helper: build a spider chart for one category ─────────
+    make_spider <- function(df, cat_key, unis_sel) {
+      metrics <- spider_categories[[cat_key]]$metrics
+      cat_df <- df %>% dplyr::filter(indicator %in% metrics)
       categories <- unname(sapply(metrics, function(m) {
         if (m %in% names(label_map)) label_map[[m]] else m
       }))
-      
+
       hc <- highchart() %>%
         hc_chart(
           polar           = TRUE,
@@ -250,51 +252,46 @@ mod_spider_server <- function(id, data, nba_title, nba_subtitle, nba_tooltip) {
           style           = list(fontFamily = "Trebuchet MS")
         ) %>%
         hc_xAxis(
-          categories        = categories,
+          categories = categories,
           tickmarkPlacement = "on",
-          lineWidth         = 0,
-          labels            = list(
+          lineWidth = 0,
+          labels = list(
             style = list(fontSize = "10px", color = "#4A5568", fontWeight = "600")
           )
         ) %>%
         hc_yAxis(
           gridLineInterpolation = "polygon",
-          lineWidth             = 0,
-          min                   = 0,
-          max                   = 100,
-          tickInterval          = 25,
-          gridLineColor         = "#E2E8F0",
-          labels                = list(enabled = FALSE),
+          lineWidth = 0,
+          min = 0,
+          max = 100,
+          tickInterval = 25,
+          gridLineColor = "#E2E8F0",
+          labels = list(enabled = FALSE),
           plotBands = list(
             list(from = 75, to = 100, color = "rgba(29,66,138,0.06)"),
-            list(from = 50, to = 75,  color = "rgba(29,66,138,0.03)"),
-            list(from = 25, to = 50,  color = "rgba(200,16,46,0.02)"),
-            list(from = 0,  to = 25,  color = "rgba(200,16,46,0.05)")
+            list(from = 50, to = 75, color = "rgba(29,66,138,0.03)"),
+            list(from = 25, to = 50, color = "rgba(200,16,46,0.02)"),
+            list(from = 0, to = 25, color = "rgba(200,16,46,0.05)")
           ),
           plotLines = list(list(
-            value     = 50,
-            color     = "#8A93A6",
+            value = 50,
+            color = "#8A93A6",
             dashStyle = "ShortDash",
-            width     = 1,
-            label     = list(
+            width = 1,
+            label = list(
               text  = "50",
               align = "right",
               style = list(color = "#8A93A6", fontSize = "9px")
             )
           ))
         ) %>%
-        hc_tooltip(
-          shared          = TRUE,
-          useHTML         = TRUE,
-          backgroundColor = "#091840",
-          borderColor     = "#1D428A",
-          borderRadius    = 8,
-          borderWidth     = 1,
-          formatter       = JS("function() {
+        hc_nba_tooltip_dark(
+          shared = TRUE,
+          formatter = JS("function() {
             var cat = this.points[0].key;
             var rows = this.points.map(function(p) {
               var real = p.point.real !== undefined ? p.point.real : p.y.toFixed(1);
-              var rnk  = p.point.rnk  !== undefined ? p.point.rnk  : '—';
+              var rnk  = p.point.rnk  !== undefined ? p.point.rnk  : '\u2014';
               return '<div style=\"display:flex;align-items:center;gap:6px;padding:2px 0;\">'
                 + '<span style=\"color:' + p.series.color + ';font-size:12px\">&#9679;</span>'
                 + '<span style=\"color:#C8D6E5;flex:1;font-size:11px\">' + p.series.name + '</span>'
@@ -311,27 +308,24 @@ mod_spider_server <- function(id, data, nba_title, nba_subtitle, nba_tooltip) {
         hc_legend(enabled = FALSE) %>%
         hc_plotOptions(
           area = list(
-            lineWidth      = 2,
+            lineWidth = 2,
             pointPlacement = "on",
-            marker         = list(
+            marker = list(
               enabled = TRUE,
               radius  = 3,
               states  = list(hover = list(enabled = TRUE, radius = 5))
             )
           )
         ) %>%
-        hc_title(
-          text  = spider_categories[[cat_key]]$label,
-          style = title_style$style
-        ) %>%
+        hc_nba_title(spider_categories[[cat_key]]$label) %>%
         hc_add_theme(hc_theme_smpl())
-      
+
       for (i in seq_along(unis_sel)) {
         uni <- unis_sel[i]
         pts <- lapply(metrics, function(m) {
-          v        <- cat_df %>% dplyr::filter(college == uni, indicator == m)
-          draw     <- if (nrow(v) == 0) NA_real_ else v$draw_val[1]
-          rnk_val  <- if (nrow(v) == 0) NA_real_ else round(v$rnk[1], 0)
+          v <- cat_df %>% dplyr::filter(college == uni, indicator == m)
+          draw <- if (nrow(v) == 0) NA_real_ else v$draw_val[1]
+          rnk_val <- if (nrow(v) == 0) NA_real_ else round(v$rnk[1], 0)
           real_val <- if (nrow(v) == 0) NA_real_ else round(v$avg[1], 2)
           real_fmt <- if (m == "overall_pick" && !is.na(real_val)) {
             paste0("#", real_val)
@@ -342,9 +336,9 @@ mod_spider_server <- function(id, data, nba_title, nba_subtitle, nba_tooltip) {
         })
         hc <- hc %>%
           hc_add_series(
-            name      = uni,
-            data      = pts,
-            color     = uni_colors[i],
+            name = uni,
+            data = pts,
+            color = uni_colors[i],
             fillColor = list(
               linearGradient = list(x1 = 0, y1 = 0, x2 = 0, y2 = 1),
               stops = list(
@@ -356,37 +350,40 @@ mod_spider_server <- function(id, data, nba_title, nba_subtitle, nba_tooltip) {
       }
       hc
     }
-    
-    # ── Cuatro renders, uno por categoría ─────────────────────
-    output$spider_advanced    <- renderHighchart({
-      df <- percentile_data(); req(nrow(df) > 0)
-      make_spider(df, "advanced",    input$unis, nba_title, nba_subtitle)
+
+    # ── Four renders, one per category ────────────────────────
+    output$spider_advanced <- renderHighchart({
+      df <- percentile_data()
+      req(nrow(df) > 0)
+      make_spider(df, "advanced", input$unis)
     })
-    output$spider_totals      <- renderHighchart({
-      df <- percentile_data(); req(nrow(df) > 0)
-      make_spider(df, "totals",      input$unis, nba_title, nba_subtitle)
+    output$spider_totals <- renderHighchart({
+      df <- percentile_data()
+      req(nrow(df) > 0)
+      make_spider(df, "totals", input$unis)
     })
-    output$spider_averages    <- renderHighchart({
-      df <- percentile_data(); req(nrow(df) > 0)
-      make_spider(df, "averages",    input$unis, nba_title, nba_subtitle)
+    output$spider_averages <- renderHighchart({
+      df <- percentile_data()
+      req(nrow(df) > 0)
+      make_spider(df, "averages", input$unis)
     })
     output$spider_percentages <- renderHighchart({
-      df <- percentile_data(); req(nrow(df) > 0)
-      make_spider(df, "percentages", input$unis, nba_title, nba_subtitle)
+      df <- percentile_data()
+      req(nrow(df) > 0)
+      make_spider(df, "percentages", input$unis)
     })
-    
-    # ── Tabla: valor / #rank sin colores de percentil ─────────
+
+    # ── Table: value / #rank ──────────────────────────────────
     output$values_table <- renderUI({
-      df       <- percentile_data()
+      df <- percentile_data()
       req(nrow(df) > 0)
       unis_sel <- input$unis
-      uni_hex  <- uni_colors[seq_along(unis_sel)]
+      uni_hex <- uni_colors[seq_along(unis_sel)]
       uni_tcols <- uni_text_colors[seq_along(unis_sel)]
-      
-      # Todas las métricas de todas las categorías
+
       all_metrics <- unlist(lapply(spider_categories, `[[`, "metrics"))
-      
-      # Cabecera
+
+      # Header
       header_cells <- paste(
         "<th style='width:90px'>Metric</th>",
         paste(sapply(seq_along(unis_sel), function(i) {
@@ -401,8 +398,8 @@ mod_spider_server <- function(id, data, nba_title, nba_subtitle, nba_tooltip) {
           )
         }), collapse = "")
       )
-      
-      # Separador de sección
+
+      # Section separator
       make_section_header <- function(label, n_cols) {
         paste0(
           "<tr style='background:linear-gradient(90deg,var(--navy-deeper),var(--navy-dark));'>",
@@ -412,26 +409,28 @@ mod_spider_server <- function(id, data, nba_title, nba_subtitle, nba_tooltip) {
           "</td></tr>"
         )
       }
-      
-      # Filas de una categoría
+
+      # Rows for a category
       make_rows <- function(cat_key, df, unis_sel, uni_hex, start_idx) {
         metrics <- spider_categories[[cat_key]]$metrics
         rows <- sapply(seq_along(metrics), function(mi) {
-          m            <- metrics[mi]
+          m <- metrics[mi]
           metric_label <- if (m %in% names(label_map)) label_map[[m]] else m
-          row_bg       <- if ((start_idx + mi) %% 2 == 0) "background:rgba(255,255,255,0.02);" else ""
-          
+          row_bg <- if ((start_idx + mi) %% 2 == 0) "background:rgba(255,255,255,0.02);" else ""
+
           cells <- paste(sapply(seq_along(unis_sel), function(i) {
-            uni      <- unis_sel[i]
-            v        <- df %>% dplyr::filter(college == uni, indicator == m)
+            uni <- unis_sel[i]
+            v <- df %>% dplyr::filter(college == uni, indicator == m)
             has_data <- nrow(v) > 0
             real_val <- if (!has_data) NA_real_ else round(v$avg[1], 2)
-            rnk_val  <- if (!has_data) NA_real_ else round(v$rnk[1], 0)
-            val_fmt  <- if (is.na(real_val)) "—" else {
+            rnk_val <- if (!has_data) NA_real_ else round(v$rnk[1], 0)
+            val_fmt <- if (is.na(real_val)) {
+              "\u2014"
+            } else {
               if (m == "overall_pick") paste0("#", real_val) else as.character(real_val)
             }
-            rnk_fmt  <- if (is.na(rnk_val)) "—" else paste0("#", rnk_val)
-            
+            rnk_fmt <- if (is.na(rnk_val)) "\u2014" else paste0("#", rnk_val)
+
             paste0(
               "<td style='text-align:center;padding:7px 6px;'>",
               "<span style='font-size:13px;font-weight:700;color:#ffffff;",
@@ -441,7 +440,7 @@ mod_spider_server <- function(id, data, nba_title, nba_subtitle, nba_tooltip) {
               "</td>"
             )
           }), collapse = "")
-          
+
           paste0(
             "<tr style='border-bottom:1px solid rgba(29,66,138,0.2);", row_bg, "'>",
             "<td style='padding:7px 10px;'>",
@@ -453,10 +452,10 @@ mod_spider_server <- function(id, data, nba_title, nba_subtitle, nba_tooltip) {
         })
         paste(rows, collapse = "")
       }
-      
-      # Construir tbody con secciones
-      n_cols   <- length(unis_sel)
-      row_idx  <- 0
+
+      # Build tbody with sections
+      n_cols <- length(unis_sel)
+      row_idx <- 0
       tbody_html <- paste(sapply(names(spider_categories), function(cat_key) {
         section_rows <- make_rows(cat_key, df, unis_sel, uni_hex, row_idx)
         row_idx <<- row_idx + length(spider_categories[[cat_key]]$metrics)
@@ -465,43 +464,20 @@ mod_spider_server <- function(id, data, nba_title, nba_subtitle, nba_tooltip) {
           section_rows
         )
       }), collapse = "")
-      
+
       tagList(
-        tags$style(HTML("
-          .spider-metric-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-family: var(--font-body);
-          }
-          .spider-metric-table thead tr {
-            background: linear-gradient(90deg, var(--navy-deeper), var(--navy-dark));
-            border-bottom: 2px solid var(--red);
-          }
-          .spider-metric-table thead th {
-            padding: 10px 8px;
-            font-size: 10px;
-            font-weight: 700;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            text-align: left;
-          }
-          .spider-metric-table tbody tr:hover {
-            background: rgba(29,66,138,0.18) !important;
-            transition: background var(--ease);
-          }
-        ")),
         div(
           style = "background:var(--navy-deeper);border:1px solid var(--navy);
                    border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-md);",
-          # Título
           div(
             style = "padding:12px 16px 10px;
                      background:linear-gradient(90deg,var(--navy-deeper),var(--navy-dark));
                      border-bottom:1px solid var(--navy);
                      display:flex;align-items:center;gap:8px;",
-            tags$span(style = "color:var(--red);font-size:13px;",
-                      tags$i(class = "fa fa-table")),
+            tags$span(
+              style = "color:var(--red);font-size:13px;",
+              tags$i(class = "fa fa-table")
+            ),
             tags$span(
               style = "color:#fff;font-weight:700;font-size:13px;
                        font-family:var(--font-display);letter-spacing:0.5px;",
@@ -524,6 +500,5 @@ mod_spider_server <- function(id, data, nba_title, nba_subtitle, nba_tooltip) {
         )
       )
     })
-    
   })
 }

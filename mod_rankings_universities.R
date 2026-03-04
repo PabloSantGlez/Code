@@ -1,5 +1,5 @@
 # ============================================================
-#  Módulo: University Rankings — Horizontal Bar Chart
+#  Module: University Rankings — Horizontal Bar Chart
 #  (mod_rankings_universities.R)
 # ============================================================
 
@@ -16,7 +16,7 @@ mod_rankings_ui <- function(id) {
 }
 
 # ── 2. Server ────────────────────────────────────────────────
-mod_rankings_server <- function(id, data, metric_sel, nba_title, nba_subtitle, nba_tooltip) {
+mod_rankings_server <- function(id, data, metric_sel) {
   moduleServer(id, function(input, output, session) {
     rankings_data <- reactive({
       data %>%
@@ -37,17 +37,11 @@ mod_rankings_server <- function(id, data, metric_sel, nba_title, nba_subtitle, n
       req(nrow(df) > 0)
       df <- df %>% arrange(avg_metric)
 
-      # Gradient palette: top positions in red, lower in navy
       n <- nrow(df)
       colors <- colorRampPalette(c("#1D428A", "#4A6FA5", "#C8102E"))(n)
 
       highchart() %>%
-        hc_chart(
-          type            = "bar",
-          backgroundColor = "transparent",
-          animation       = list(duration = 600),
-          style           = list(fontFamily = "Trebuchet MS")
-        ) %>%
+        hc_nba_base("bar") %>%
         hc_plotOptions(
           bar = list(
             borderWidth  = 0,
@@ -55,35 +49,10 @@ mod_rankings_server <- function(id, data, metric_sel, nba_title, nba_subtitle, n
             pointPadding = 0.08,
             groupPadding = 0.08,
             colorByPoint = TRUE
-          ),
-          series = list(
-            animation = list(duration = 600)
           )
         ) %>%
-        hc_xAxis(
-          categories = df$college,
-          labels = list(
-            style = list(
-              fontSize   = "11px",
-              color      = "#2D3748",
-              fontWeight = "500",
-              fontFamily = "Trebuchet MS"
-            )
-          ),
-          lineWidth = 0,
-          tickWidth = 0
-        ) %>%
-        hc_yAxis(
-          title = list(
-            text  = metric_sel(),
-            style = list(color = "#718096", fontSize = "11px", fontWeight = "600")
-          ),
-          gridLineColor = "rgba(226,232,240,0.6)",
-          gridLineDashStyle = "Dot",
-          labels = list(
-            style = list(color = "#A0AEC0", fontSize = "10px")
-          )
-        ) %>%
+        hc_nba_xaxis_categories(df$college) %>%
+        hc_nba_yaxis(title_text = metric_sel()) %>%
         hc_add_series(
           name = "Avg Value",
           data = lapply(seq_len(n), function(i) {
@@ -96,15 +65,8 @@ mod_rankings_server <- function(id, data, metric_sel, nba_title, nba_subtitle, n
           }),
           showInLegend = FALSE
         ) %>%
-        hc_tooltip(
-          useHTML         = TRUE,
-          backgroundColor = "rgba(9, 24, 64, 0.97)",
-          borderColor     = "#1D428A",
-          borderRadius    = 8,
-          borderWidth     = 1,
-          shadow          = TRUE,
-          outside         = FALSE,
-          formatter       = JS("function() {
+        hc_nba_tooltip_dark(
+          formatter = JS("function() {
             var p = this.point;
             return '<div style=\"padding:10px 14px;font-family:Trebuchet MS,sans-serif;min-width:200px;\">'
               + '<div style=\"font-size:13px;font-weight:700;color:#FFFFFF;'
@@ -121,21 +83,9 @@ mod_rankings_server <- function(id, data, metric_sel, nba_title, nba_subtitle, n
               + '</div>';
           }")
         ) %>%
-        hc_title(
-          text = "University Rankings",
-          style = list(
-            color      = "#0F2355",
-            fontFamily = "Trebuchet MS",
-            fontWeight = "700",
-            fontSize   = "16px"
-          )
-        ) %>%
-        hc_subtitle(
-          text  = paste0("Top 15 by avg ", metric_sel()),
-          style = list(color = "#8A93A6", fontSize = "11px")
-        ) %>%
-        hc_legend(enabled = FALSE) %>%
-        hc_add_theme(hc_theme_smpl())
+        hc_nba_title("University Rankings") %>%
+        hc_nba_subtitle(paste0("Top 15 by avg ", metric_sel())) %>%
+        hc_legend(enabled = FALSE)
     })
   })
 }

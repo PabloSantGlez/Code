@@ -1,0 +1,124 @@
+# Refactoring del Código NBA Draft Shiny App
+
+Mejorar la mantenibilidad del código eliminando redundancias, consolidando estilos Highcharts repetidos en un archivo central de utilidades, y renombrando archivos/funciones para mayor claridad.
+
+## Análisis de Redundancias Encontradas
+
+| Problema                                                    | Archivos afectados                                                    | Impacto                                              |
+| ----------------------------------------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------- |
+| `rank_colors` duplicado                                     | `app.R` + `mod_redraft.R`                                             | Se redefine dentro del server del redraft            |
+| Estilos HC (title, subtitle, tooltip) copiados              | Todos los 7 módulos                                                   | Cada módulo redefine inline los mismos colores/fonts |
+| Tooltip HTML casi idéntico                                  | `mod_rankings`, `mod_scatter`, `mod_area_rank`, `mod_timeline`        | Misma estructura con mínimas variaciones             |
+| CSS de modal/KPI inline                                     | `mod_map_college.R`                                                   | ~180 líneas de CSS dentro del R                      |
+| CSS de spider table inline                                  | `mod_spider_university.R`                                             | ~25 líneas de CSS dentro del R                       |
+| Archivo mal nombrado                                        | `mod_overall_performance.R` define funciones `mod_pick_performance_*` | El nombre del archivo no coincide con las funciones  |
+| `nba_title/subtitle/tooltip/legend` pasados como parámetros | `app.R` → todos los módulos                                           | Se pasan 3-5 objetos de estilo a cada módulo         |
+
+## Proposed Changes
+
+### Nuevo archivo de utilidades de estilos
+
+#### [NEW] [utils_chart_styles.R](file:///c:/Users/pasan/Documents/Code/utils_chart_styles.R)
+
+Archivo central con definiciones compartidas:
+
+- **`rank_levels`** y **`rank_colors`** — Definidos una sola vez
+- **`hc_nba_base()`** — Función helper que aplica `hc_chart(backgroundColor, fontFamily)` + `hc_add_theme(hc_theme_smpl())`
+- **`hc_nba_title(text)`** — Wrapper para `hc_title()` con estilo NBA
+- **`hc_nba_subtitle(text)`** — Wrapper para `hc_subtitle()` con estilo NBA
+- **`hc_nba_tooltip_dark()`** — El tooltip oscuro estándar (bg `rgba(9,24,64,0.97)`, border `#1D428A`, radius 8)
+- **`hc_nba_legend_right()`** — Leyenda vertical alineada a la derecha
+- **`hc_nba_axis_clean()`** — Estilo de eje (gridLineDot, colores de labels)
+
+Esto eliminará las listas `nba_title`, `nba_subtitle`, `nba_tooltip`, `nba_legend` de `app.R` y todos los parámetros de estilo que se pasan a cada módulo.
+
+---
+
+### Limpieza de app.R
+
+#### [MODIFY] [app.R](file:///c:/Users/pasan/Documents/Code/app.R)
+
+- Reemplazar `source("mod_overall_performance.R")` → `source("mod_pick_performance.R")`
+- Añadir `source("utils_chart_styles.R")` al inicio
+- Eliminar las definiciones de `nba_title`, `nba_subtitle`, `nba_tooltip`, `nba_legend`, `nba_axis`, `rank_levels`, `rank_colors` (ahora en `utils_chart_styles.R`)
+- Simplificar las llamadas a los servidores de módulos eliminando parámetros de estilo
+
+---
+
+### Renombrar archivo de módulo
+
+#### [MODIFY] [mod_overall_performance.R → mod_pick_performance.R](file:///c:/Users/pasan/Documents/Code/mod_overall_performance.R)
+
+- Renombrar el archivo para que coincida con las funciones `mod_pick_performance_ui` / `mod_pick_performance_server` que contiene
+- Usar funciones de `utils_chart_styles.R` en lugar de los parámetros pasados
+
+---
+
+### Refactorizar módulos de University Rankings (4 archivos)
+
+#### [MODIFY] [mod_rankings_universities.R](file:///c:/Users/pasan/Documents/Code/mod_rankings_universities.R)
+
+- Eliminar parámetros `nba_title`, `nba_subtitle`, `nba_tooltip` del server
+- Usar `hc_nba_title()`, `hc_nba_subtitle()`, `hc_nba_tooltip_dark()` etc.
+- Eliminar estilos inline de ejes repetidos
+
+#### [MODIFY] [mod_area_rank.R](file:///c:/Users/pasan/Documents/Code/mod_area_rank.R)
+
+- Eliminar parámetros `nba_title`, `nba_subtitle`, `nba_tooltip`, `rank_levels`, `rank_colors` del server
+- Usar constantes globales de `utils_chart_styles.R`
+
+#### [MODIFY] [mod_scatter_university.R](file:///c:/Users/pasan/Documents/Code/mod_scatter_university.R)
+
+- Eliminar parámetros `nba_title`, `nba_subtitle`, `nba_tooltip` del server
+- Usar funciones helper de estilos
+
+#### [MODIFY] [mod_timeline_university.R](file:///c:/Users/pasan/Documents/Code/mod_timeline_university.R)
+
+- Eliminar parámetros `nba_title`, `nba_subtitle`, `nba_tooltip` del server
+- Usar funciones helper de estilos
+
+---
+
+### Refactorizar módulos restantes
+
+#### [MODIFY] [mod_redraft.R](file:///c:/Users/pasan/Documents/Code/mod_redraft.R)
+
+- Eliminar la definición local de `rank_colors` (líneas 26-36)
+- Eliminar parámetros `nba_title`, `nba_subtitle`, `nba_tooltip`, `nba_legend`
+- Usar constantes y funciones de `utils_chart_styles.R`
+
+#### [MODIFY] [mod_heatmap.R](file:///c:/Users/pasan/Documents/Code/mod_heatmap.R)
+
+- Eliminar parámetros `nba_title`, `nba_subtitle`, `nba_tooltip`
+- Usar funciones helper de estilos
+
+#### [MODIFY] [mod_spider_university.R](file:///c:/Users/pasan/Documents/Code/mod_spider_university.R)
+
+- Eliminar parámetros `nba_title`, `nba_subtitle`, `nba_tooltip`
+- Mover CSS de `.spider-metric-table` a `www/styles.css`
+
+#### [MODIFY] [mod_map_college.R](file:///c:/Users/pasan/Documents/Code/mod_map_college.R)
+
+- Eliminar parámetros `nba_title`, `nba_subtitle`
+- Mover CSS de modal/KPI/tabla (~180 líneas) a `www/styles.css`
+
+---
+
+### Consolidar CSS
+
+#### [MODIFY] [styles.css](file:///c:/Users/pasan/Documents/Code/www/styles.css)
+
+- Añadir estilos del modal/KPI (actualmente inline en `mod_map_college.R`)
+- Añadir estilos de `.spider-metric-table` (actualmente inline en `mod_spider_university.R`)
+- Añadir estilos de `#draft_table` (actualmente inline en `app.R`)
+
+## Verification Plan
+
+### Manual Verification
+
+1. Ejecutar `shiny::runApp('c:/Users/pasan/Documents/Code')` en la consola de R
+2. Verificar que la pestaña **Overall Performance** carga correctamente con el gráfico de pick performance, redraft scatter y heatmap
+3. Verificar que la pestaña **College & Scouting** > **National Talent Map** muestra el mapa y el modal al hacer clic en un estado
+4. Verificar que **Universities Ranking** muestra los 4 gráficos (bar chart, stacked bar, scatter bubble, column timeline) con estilos correctos
+5. Verificar que **University Profiles** muestra los 4 spider charts y la tabla de métricas
+6. Cambiar la métrica en el select input y verificar que los 4 gráficos se actualizan

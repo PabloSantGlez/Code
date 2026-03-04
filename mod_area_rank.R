@@ -1,5 +1,5 @@
 # ============================================================
-#  Módulo: Rank Tier Composition — Stacked Bar
+#  Module: Rank Tier Composition — Stacked Bar
 #  (mod_area_rank.R)
 # ============================================================
 
@@ -16,8 +16,7 @@ mod_area_rank_ui <- function(id) {
 }
 
 # ── 2. Server ────────────────────────────────────────────────
-mod_area_rank_server <- function(id, data, metric_sel, nba_title, nba_subtitle, nba_tooltip,
-                                 rank_levels, rank_colors) {
+mod_area_rank_server <- function(id, data, metric_sel) {
   moduleServer(id, function(input, output, session) {
     comp_data <- reactive({
       met <- metric_sel()
@@ -62,12 +61,7 @@ mod_area_rank_server <- function(id, data, metric_sel, nba_title, nba_subtitle, 
         pull(college)
 
       hc <- highchart() %>%
-        hc_chart(
-          type            = "bar",
-          backgroundColor = "transparent",
-          animation       = list(duration = 600),
-          style           = list(fontFamily = "Trebuchet MS")
-        ) %>%
+        hc_nba_base("bar") %>%
         hc_plotOptions(
           bar = list(
             stacking     = "percent",
@@ -75,45 +69,21 @@ mod_area_rank_server <- function(id, data, metric_sel, nba_title, nba_subtitle, 
             borderRadius = 0,
             pointPadding = 0.05,
             groupPadding = 0.08
-          ),
-          series = list(
-            animation = list(duration = 600)
           )
         ) %>%
-        hc_xAxis(
-          categories = college_order,
-          labels = list(
-            style = list(
-              fontSize   = "11px",
-              color      = "#2D3748",
-              fontWeight = "500",
-              fontFamily = "Trebuchet MS"
+        hc_nba_xaxis_categories(college_order) %>%
+        hc_nba_yaxis(
+          title_text = "% of Drafted Players",
+          extra = list(
+            max = 100,
+            labels = list(
+              format = "{value}%",
+              style  = nba_axis_label_style
             )
-          ),
-          lineWidth = 0,
-          tickWidth = 0
-        ) %>%
-        hc_yAxis(
-          title = list(
-            text  = "% of Drafted Players",
-            style = list(color = "#718096", fontSize = "11px", fontWeight = "600")
-          ),
-          max = 100,
-          gridLineColor = "rgba(226,232,240,0.6)",
-          gridLineDashStyle = "Dot",
-          labels = list(
-            format = "{value}%",
-            style  = list(color = "#A0AEC0", fontSize = "10px")
           )
         ) %>%
-        hc_tooltip(
-          useHTML = TRUE,
+        hc_nba_tooltip_dark(
           shared = TRUE,
-          backgroundColor = "rgba(9, 24, 64, 0.97)",
-          borderColor = "#1D428A",
-          borderRadius = 8,
-          borderWidth = 1,
-          shadow = TRUE,
           headerFormat = paste0(
             "<div style='padding:10px 14px 6px;font-family:Trebuchet MS,sans-serif;min-width:200px;'>",
             "<div style='font-size:13px;font-weight:700;color:#FFFFFF;",
@@ -132,36 +102,14 @@ mod_area_rank_server <- function(id, data, metric_sel, nba_title, nba_subtitle, 
           ),
           footerFormat = "</div>"
         ) %>%
-        hc_title(
-          text = "Player Quality by University",
-          style = list(
-            color      = "#0F2355",
-            fontFamily = "Trebuchet MS",
-            fontWeight = "700",
-            fontSize   = "16px"
-          )
-        ) %>%
-        hc_subtitle(
-          text  = paste0("Rank-tier composition of top 15 universities (by ", metric_sel(), ")"),
-          style = list(color = "#8A93A6", fontSize = "11px")
-        ) %>%
-        hc_legend(
-          align          = "right",
-          verticalAlign  = "middle",
-          layout         = "vertical",
-          itemStyle      = list(color = "#4A5568", fontSize = "10px", fontWeight = "500"),
-          itemHoverStyle = list(color = "#0F2355"),
-          symbolRadius   = 3,
-          symbolHeight   = 10,
-          symbolWidth    = 10
-        ) %>%
-        hc_add_theme(hc_theme_smpl())
+        hc_nba_title("Player Quality by University") %>%
+        hc_nba_subtitle(paste0("Rank-tier composition of top 15 universities (by ", metric_sel(), ")")) %>%
+        hc_nba_legend_right()
 
       # Add one series per rank tier (in reverse so legend order = top-to-bottom)
       for (lvl in rev(rank_levels)) {
         lvl_df <- df %>% filter(rank == lvl)
         if (nrow(lvl_df) > 0) {
-          # Align data to college_order
           vals <- sapply(college_order, function(c) {
             row <- lvl_df %>% filter(college == c)
             if (nrow(row) == 0) 0L else row$n[1]

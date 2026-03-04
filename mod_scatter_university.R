@@ -1,5 +1,5 @@
 # ============================================================
-#  Módulo: Quality vs Volume — Scatter/Bubble Chart
+#  Module: Quality vs Volume — Scatter/Bubble Chart
 #  (mod_scatter_university.R)
 # ============================================================
 
@@ -16,7 +16,7 @@ mod_scatter_ui <- function(id) {
 }
 
 # ── 2. Server ────────────────────────────────────────────────
-mod_scatter_server <- function(id, data, metric_sel, nba_title, nba_subtitle, nba_tooltip) {
+mod_scatter_server <- function(id, data, metric_sel) {
     moduleServer(id, function(input, output, session) {
         scatter_data <- reactive({
             met <- metric_sel()
@@ -38,10 +38,6 @@ mod_scatter_server <- function(id, data, metric_sel, nba_title, nba_subtitle, nb
             df <- scatter_data()
             req(nrow(df) > 0)
 
-            # Normalize bubble size (z) for display
-            z_max <- max(abs(df$total_metric), na.rm = TRUE)
-            if (z_max == 0) z_max <- 1
-
             # Assign colors: top 5 highlighted in red, rest in navy
             top5 <- head(df$college, 5)
 
@@ -60,11 +56,11 @@ mod_scatter_server <- function(id, data, metric_sel, nba_title, nba_subtitle, nb
                             enabled = TRUE,
                             format = "{point.college}",
                             style = list(
-                                fontSize        = "9px",
-                                color           = "#0F2355",
-                                fontWeight      = "600",
-                                textOutline     = "1.5px #FFFFFF",
-                                fontFamily      = "Trebuchet MS"
+                                fontSize    = "9px",
+                                color       = "#0F2355",
+                                fontWeight  = "600",
+                                textOutline = "1.5px #FFFFFF",
+                                fontFamily  = "Trebuchet MS"
                             ),
                             y = -12
                         )
@@ -75,60 +71,30 @@ mod_scatter_server <- function(id, data, metric_sel, nba_title, nba_subtitle, nb
             })
 
             highchart() %>%
-                hc_chart(
-                    type            = "bubble",
-                    backgroundColor = "transparent",
-                    animation       = list(duration = 600),
-                    style           = list(fontFamily = "Trebuchet MS"),
-                    zoomType        = "xy"
-                ) %>%
+                hc_nba_base("bubble", extra = list(zoomType = "xy")) %>%
                 hc_plotOptions(
                     bubble = list(
-                        minSize = "4%",
-                        maxSize = "14%",
+                        minSize       = "4%",
+                        maxSize       = "14%",
                         softThreshold = TRUE
-                    ),
-                    series = list(
-                        animation = list(duration = 600)
                     )
                 ) %>%
                 hc_xAxis(
-                    title = list(
-                        text  = "Players Drafted",
-                        style = list(color = "#718096", fontSize = "11px", fontWeight = "600")
-                    ),
+                    title = list(text = "Players Drafted", style = nba_axis_title_style),
                     gridLineColor = "rgba(226,232,240,0.4)",
                     gridLineDashStyle = "Dot",
                     gridLineWidth = 1,
                     lineColor = "#E2E8F0",
-                    labels = list(
-                        style = list(color = "#A0AEC0", fontSize = "10px")
-                    )
+                    labels = list(style = nba_axis_label_style)
                 ) %>%
-                hc_yAxis(
-                    title = list(
-                        text  = paste0("Avg ", metric_sel()),
-                        style = list(color = "#718096", fontSize = "11px", fontWeight = "600")
-                    ),
-                    gridLineColor = "rgba(226,232,240,0.6)",
-                    gridLineDashStyle = "Dot",
-                    labels = list(
-                        style = list(color = "#A0AEC0", fontSize = "10px")
-                    )
-                ) %>%
+                hc_nba_yaxis(title_text = paste0("Avg ", metric_sel())) %>%
                 hc_add_series(
                     name         = "Universities",
                     data         = point_data,
                     showInLegend = FALSE
                 ) %>%
-                hc_tooltip(
-                    useHTML         = TRUE,
-                    backgroundColor = "rgba(9, 24, 64, 0.97)",
-                    borderColor     = "#1D428A",
-                    borderRadius    = 8,
-                    borderWidth     = 1,
-                    shadow          = TRUE,
-                    formatter       = JS("function() {
+                hc_nba_tooltip_dark(
+                    formatter = JS("function() {
             var p = this.point;
             return '<div style=\"padding:10px 14px;font-family:Trebuchet MS,sans-serif;min-width:200px;\">'
               + '<div style=\"font-size:13px;font-weight:700;color:#FFFFFF;'
@@ -149,21 +115,9 @@ mod_scatter_server <- function(id, data, metric_sel, nba_title, nba_subtitle, nb
               + '</div>';
           }")
                 ) %>%
-                hc_title(
-                    text = "Quality vs Volume",
-                    style = list(
-                        color      = "#0F2355",
-                        fontFamily = "Trebuchet MS",
-                        fontWeight = "700",
-                        fontSize   = "16px"
-                    )
-                ) %>%
-                hc_subtitle(
-                    text  = paste0("Bubble size = total cumulative ", metric_sel(), " | Top 5 labeled"),
-                    style = list(color = "#8A93A6", fontSize = "11px")
-                ) %>%
-                hc_legend(enabled = FALSE) %>%
-                hc_add_theme(hc_theme_smpl())
+                hc_nba_title("Quality vs Volume") %>%
+                hc_nba_subtitle(paste0("Bubble size = total cumulative ", metric_sel(), " | Top 5 labeled")) %>%
+                hc_legend(enabled = FALSE)
         })
     })
 }
